@@ -7,7 +7,19 @@ var uradHeaders = {
 var http = require('http');
 var elasticsearch = require('elasticsearch');
 var client = new elasticsearch.Client({
-    host: 'localhost:9200'
+    host: 'localhost:9200',
+    log: [
+	{
+	type: 'file',
+	level: 'trace',
+	path: './elasticsearch.log'
+    	},
+	{
+	type: 'file',
+	level: 'error',
+	path: './elasticsearch.err'
+	}
+	]
 });
 var filter = require('./filter');
 
@@ -60,11 +72,11 @@ function addData(device, parameter) {
             var data = JSON.parse(full);
             if (data.success == null && data.error == null) {
                 var urad = {
-                    time: data[0].time,
-                    lat: data[0].latitude,
-                    long: data[0].longitude
+                    time: Number(data[0].time),
+                    lat: Number(data[0].latitude),
+                    long: Number(data[0].longitude)
                 };
-                urad[parameter] = data[0][parameter];
+                urad[parameter] = Number(data[0][parameter]);
 
                 client.create({
                     index: device.toLowerCase(),
@@ -91,8 +103,8 @@ function addAll() {
             parameters.forEach(function(p) {
                 addData(d, p);
             });
-            setTimeout(addAll, 60000);
         });
+	setTimeout(addAll, 180000);
     } else {
         setTimeout(addAll, 10000);
     }
